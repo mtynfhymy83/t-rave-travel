@@ -17,38 +17,38 @@ class MediaController extends Controller
     {
 // اعتبارسنجی ورودی‌ها
         $validated = $request->validate([
-            'id' => 'required|integer',
+//            'id' => 'required|integer',
 //'expire_at' => 'required|date',
             'upload_file' => 'required|file',
         ]);
 
-        $id = $validated['id'];
+//        $id = $validated['id'];
         $expireAt = Carbon::now()->addMinutes(10);
 
-// ذخیره‌سازی فایل در دایرکتوری موقت
+
         $file = $request->file('upload_file');
         if ($file) {
-// ذخیره فایل در مسیر tmp
+
             $filePath = $file->store('local', 'public');
-// ایجاد لینک موقت برای فایل با تاریخ انقضا
+
             $temporaryUrl = url('storage/' . $filePath);
 
-// پاسخ به درخواست شامل لینک موقت و جزئیات دیگر
+
             return response()->json([
-                'id' => $id,
-                'file_path' => $filePath, // ذخیره مسیر فایل موقت
+//                'id' => $id,
+                'file_path' => $filePath,
                 'file_url' => $temporaryUrl,
                 'expire_at' => $expireAt->toDateTimeString(),
             ]);
         }
 
-// اگر فایلی ارسال نشده باشد، ارور برگردانید
+
         return response()->json([
             'error' => 'File not found',
         ], 400);
     }
 
-// متد برای انتقال فایل بعد از submit
+
     public function moveFileToPermanentStorage(Request $request)
     {
         // اعتبارسنجی ورودی‌ها

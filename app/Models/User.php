@@ -72,7 +72,7 @@ public function articles()
             'name'=>$request->input('name'),
             'phone'=>$request->input('phone'),
             'photo'=>$image,
-            'password'=>$request->input('password'),
+//            'password'=>$request->input('password'),
         ]);
     }
 

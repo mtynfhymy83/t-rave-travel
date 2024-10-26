@@ -76,11 +76,15 @@ class TicketApicontroller extends Controller
     public function getticket($id)
     {
         $ticket = Ticket::findOrFail($id);
-        $answerTicket = Ticket::where('parent', $id)->first();
+//        $answerTicket = Ticket::where('parent', $id)->first();
 
         return response()->json([
-            'ticket' => $ticket->body,
-            'answer' => $answerTicket ? $answerTicket->body : null,
+            'body' => $ticket->body,
+             'ticketID' => $ticket->id,
+            'is_Answer' => $ticket->is_Answer,
+            'created_at'=>$ticket->created_at,
+             'title' => $ticket->title,
+//            'answer' => $answerTicket ? $answerTicket->body : null,
         ]);
     }
 
