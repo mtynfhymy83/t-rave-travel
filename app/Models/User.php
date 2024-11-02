@@ -60,7 +60,8 @@ public function articles()
 
     public static function updateUserInfo($user,$request)
     {
-        if ($request->hasFile('upload_file')) {
+        if ($request->file('upload_file') ){
+
             $mediaController = new MediaController();
             $image = $mediaController->moveFileToPermanentStorage($request);
         } else {

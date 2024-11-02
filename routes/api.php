@@ -38,6 +38,7 @@ Route::prefix('/v1')->namespace('Api\V1')->middleware('auth:sanctum')->group(fun
     Route::middleware(['auth:sanctum' , 'profile'])->get('show_ticket', [\App\Http\Controllers\Api\V1\TicketApicontroller::class, 'getAll']);
     Route::middleware(['auth:sanctum' , 'profile'])->get('get/ticket/{id}', [\App\Http\Controllers\Api\V1\TicketApicontroller::class, 'getticket']);
     Route::middleware(['auth:sanctum' , 'profile'])->post('article' , [\App\Http\Controllers\Api\V1\ArticleController::class, 'create']);
+    Route::middleware(['auth:sanctum' , 'profile'])->post('upload' , [\App\Http\Controllers\Api\V1\EditorController::class, 'upload']);
 });
 
 

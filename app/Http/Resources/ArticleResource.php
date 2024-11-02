@@ -27,6 +27,7 @@ class ArticleResource extends JsonResource
             'upload_file' =>$this->upload_file ?? 'no',
             'review'=>$this->review,
             'comments'=>CommentResource::collection($this->comments),
+            'cover'=>$this->cover,
 
         ];
     }

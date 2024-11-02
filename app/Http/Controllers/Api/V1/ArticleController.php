@@ -6,13 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Repositories\ArticleRepository;
 use App\Http\Repositories\ProductRepository;
 use App\Http\Resources\ArticleResource;
-use App\Http\Resources\ProductResource;
 use App\Http\Resources\UserResource;
 use App\Http\services\Keys;
 use App\Models\Article;
-use App\Models\Brand;
 use App\Models\Comment;
-use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,27 +19,25 @@ class ArticleController extends Controller
     public function create(Request $request)
     {
         $request->validate([
-            'title' => 'required|string',
+            'title' => 'required|string|max:255',
             'body' => 'required|string',
-            'upload_file' => 'required|image'
+            'cover' => 'required|string',
         ]);
 
-//        $filePath = $request->file('cover')->store('covers', 'public');
         $user = auth()->user();
 
         if ($user) {
 
-            $article = Article::createarticle($user, $request);
-            return Response()->json([
+            $article = new Article();
+            $result = $article->createarticle($user, $request);
+            return response()->json([
                 'result' => true,
-                'message' => "article created successfully",
-                'data' => [
-                    Keys::articles => new ArticleResource($article)
-                ]
+                'message' => "Article created successfully",
+                'data' => [Keys::articles => new ArticleResource($result)]
             ], 201);
-
-//        return response()->json($article->load('creator:id,name'), 201);
         }
+
+        return response()->json(['message' => 'Unauthorized'], 401);
     }
 
 

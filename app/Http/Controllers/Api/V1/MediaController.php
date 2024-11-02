@@ -17,12 +17,10 @@ class MediaController extends Controller
     {
 // اعتبارسنجی ورودی‌ها
         $validated = $request->validate([
-//            'id' => 'required|integer',
-//'expire_at' => 'required|date',
             'upload_file' => 'required|file',
         ]);
 
-//        $id = $validated['id'];
+
         $expireAt = Carbon::now()->addMinutes(10);
 
 

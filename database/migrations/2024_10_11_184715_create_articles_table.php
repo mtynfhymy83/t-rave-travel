@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('review')->default(0);
             $table->integer('count')->default(0);
             $table->string('upload_file')->nullable();
+            $table->string('cover')->nullable();
             $table->unsignedBigInteger('creator');
             $table->foreign('creator')->references('id')->on('users')->onDelete('cascade');
             $table->integer('publish')->default(0); // یا می‌توانید از tinyInteger() استفاده کنید اگر فقط 0 و 1 مد نظرتان است
