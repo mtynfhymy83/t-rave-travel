@@ -17,28 +17,36 @@ class MediaController extends Controller
     {
 // اعتبارسنجی ورودی‌ها
         $validated = $request->validate([
-            'upload_file' => 'required|file',
+            'upload' => 'required|file',
         ]);
 
 
-        $expireAt = Carbon::now()->addMinutes(10);
+        if ($request->hasFile('upload')) {
 
-
-        $file = $request->file('upload_file');
-        if ($file) {
-
-            $filePath = $file->store('local', 'public');
-
-            $temporaryUrl = url('storage/' . $filePath);
-
+            $path = $request->file('upload')->store('local', 'public');
+            $temporaryUrl = url('storage/' . $path);
 
             return response()->json([
-//                'id' => $id,
-                'file_path' => $filePath,
-                'file_url' => $temporaryUrl,
-                'expire_at' => $expireAt->toDateTimeString(),
+                'uploaded' => 1,
+                'url' => $temporaryUrl,
+                'path' => $path,
+
             ]);
         }
+        // if ($file) {
+
+        // $filePath = $file->store('local', 'public');
+
+        // $temporaryUrl = url('storage/' . $filePath);
+
+
+//             return response()->json([
+// //                'id' => $id,
+//                 'url' => $temporaryUrl,
+//                 'uploaded' => 1,
+
+//             ]);
+        // }
 
 
         return response()->json([
@@ -53,7 +61,7 @@ class MediaController extends Controller
         try {
             // اعتبارسنجی ورودی‌ها
             $validated = $request->validate([
-                'file_path' => 'required|string', // مسیر فایل موقت
+                'path' => 'required|string', // مسیر فایل موقت
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             // اگر اعتبارسنجی شکست خورد، پیغام خطا را چاپ کنید
@@ -61,7 +69,7 @@ class MediaController extends Controller
         }
 
         // دریافت مسیر فایل از ورودی
-        $filePath = $validated['file_path'];
+        $filePath = $validated['path'];
 
 
         // اگر مسیر شامل 'public/local' نیست، به مسیر اضافه‌اش می‌کنیم
@@ -95,4 +103,51 @@ class MediaController extends Controller
             return response()->json(['message' => 'File not found in local storage.'], 404);
         }
     }
+
+    public function uploadArticle(Request $request)
+    {
+// Validate the request
+        // $request->validate([
+        //     'upload' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        // ]);
+
+
+        // $expireAt = Carbon::now()->addMinutes(10);
+
+
+        if ($request->hasFile('upload')) {
+
+            $path = $request->file('upload')->store('local', 'public');
+            $temporaryUrl = url('storage/' . $path);
+
+            return response()->json([
+                'uploaded' => 1,
+                'url' => $temporaryUrl,
+            ]);
+        }
+
+
+        return response()->json([
+            'error' => 'File not found',
+        ], 400);
+    }
 }
+// نام جدید فایل برای انتقال به دایرکتوری اصلی (public)
+//    $newFilePath = str_replace('public', 'liara/', $filePath);
+//
+//// انتقال فایل به مسیر جدید
+//    Storage::move($filePath, $newFilePath);
+
+// پاسخ موفقیت‌آمیز با مسیر جدید فایل
+//    return response()->json([
+//        'message' => 'File moved successfully',
+//        'new_file_path' => $newFilePath,
+//        'new_file_url' => Storage::url($newFilePath),
+//    ]);
+//
+//
+//return response()->json([
+//'error' => 'File not found',
+//], 404);
+//}
+//}

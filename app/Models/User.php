@@ -41,15 +41,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(Address::class);
     }
-public function tickets()
-{
+    public function tickets()
+    {
         return $this->hasMany(Ticket::class);
 
-}
-public function articles()
-{
-    return $this->hasMany(Article::class);
-}
+    }
+    public function articles()
+    {
+        return $this->hasMany(Article::class);
+    }
 
 
     public function comments()
@@ -60,7 +60,7 @@ public function articles()
 
     public static function updateUserInfo($user,$request)
     {
-        if ($request->file('upload_file') ){
+        if ($request->file('upload') ){
 
             $mediaController = new MediaController();
             $image = $mediaController->moveFileToPermanentStorage($request);
