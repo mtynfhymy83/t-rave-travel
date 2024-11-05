@@ -34,7 +34,7 @@ class ArticleController extends Controller
             return response()->json([
                 'result' => true,
                 'message' => "Article created successfully",
-                'data' => [Keys::articles => new ArticleResource($result)]
+                'data' => ['id' => $result->id]
             ], 201);
         }
 
