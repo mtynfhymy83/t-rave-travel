@@ -81,7 +81,7 @@ class TicketApicontroller extends Controller
         return response()->json([
             'body' => $ticket->body,
              'ticketID' => $ticket->id,
-            'is_Answer' => $ticket->is_Answer,
+            'isAnswer' => $ticket->isAnswer,
             'created_at'=>$ticket->created_at,
              'title' => $ticket->title,
 //            'answer' => $answerTicket ? $answerTicket->body : null,

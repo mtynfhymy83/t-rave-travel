@@ -15,10 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('body');
+            $table->string('type')->nullable();
             $table->string('title_en')->nullable();
             $table->integer('review')->default(0);
             $table->integer('count')->default(0);
             $table->string('upload_file')->nullable();
+            $table->string('publish_hour')->nullable();
+            $table->string('publish_date')->nullable();
             $table->string('cover')->nullable();
             $table->unsignedBigInteger('creator');
             $table->foreign('creator')->references('id')->on('users')->onDelete('cascade');

@@ -96,22 +96,3 @@ class MediaController extends Controller
         }
     }
 }
-// نام جدید فایل برای انتقال به دایرکتوری اصلی (public)
-//    $newFilePath = str_replace('public', 'liara/', $filePath);
-//
-//// انتقال فایل به مسیر جدید
-//    Storage::move($filePath, $newFilePath);
-
-// پاسخ موفقیت‌آمیز با مسیر جدید فایل
-//    return response()->json([
-//        'message' => 'File moved successfully',
-//        'new_file_path' => $newFilePath,
-//        'new_file_url' => Storage::url($newFilePath),
-//    ]);
-//
-//
-//return response()->json([
-//'error' => 'File not found',
-//], 404);
-//}
-//}

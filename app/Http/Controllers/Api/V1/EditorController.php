@@ -11,62 +11,66 @@ class EditorController extends Controller
     {
 // Validate the request
         $request->validate([
-            'upload_file' => 'required|file',
+            'upload' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-// Store the image
-        if ($request->hasFile('upload_file')) {
-            $path = $request->file('upload_file')->store('images', 'public');
 
-// Generate the URL for the uploaded image
-            $url = Storage::url($path);
+        // $expireAt = Carbon::now()->addMinutes(10);
 
-// Return the response in the format CKEditor expects
+
+        if ($request->hasFile('upload')) {
+
+            $path = $request->file('upload')->store('local', 'public');
+
+            $temporaryUrl = url('storage/' . $path);
+
             return response()->json([
                 'uploaded' => 1,
-                'url' => $url,
+                'url' => $temporaryUrl,
             ]);
         }
 
-        return response()->json(['uploaded' => 0], 400);
+
+        return response()->json([
+            'error' => 'File not found',
+        ], 400);
     }
 
     public function moveFileToPermanentStorage(Request $request)
     {
-        // اعتبارسنجی ورودی‌ها
-        $validated = $request->validate([
-            'image_url' => 'required|url',
-        ]);
+        try {
+            $validated = $request->validate([
+                'cover' => 'required|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['message' => 'Upload failed: ' . $e->getMessage()], 400);
+        }
 
-        $imageUrl = $validated['image_url'];
-        $fileContents = null;
+        $fileUrl = $validated['cover'];
 
-        // بررسی اینکه URL محلی است یا خارجی
-        if (str_contains($imageUrl, 'http://127.0.0.1:8000/storage/local/')) {
-            $localPath = storage_path('app/public/local/' . basename($imageUrl));
+        // استخراج نام فایل از URL
+        $fileName = basename($fileUrl);
 
-            // بررسی وجود فایل
-            if (file_exists($localPath)) {
-                // خواندن محتویات فایل
-                $fileContents = file_get_contents($localPath);
+        // مسیر کامل فایل در storage (سیستم محلی)
+        $localFilePath = '/travel/storage/app/public/local/' . $fileName; // مسیر جدید بر اساس ساختار شما
 
-                // ساخت نام یکتا برای فایل
-                $fileName = uniqid() . '.' . pathinfo(parse_url($imageUrl, PHP_URL_PATH), PATHINFO_EXTENSION);
+        // بررسی وجود فایل در سیستم محلی با استفاده از Storage facade
+        if (file_exists($localFilePath)) {
+            $fileContents = file_get_contents($localFilePath);
 
-                // آپلود فایل به لیارا
-                $uploaded = Storage::disk('liara')->put($fileName, $fileContents);
+            // ساخت نام یکتا برای فایل در لیارا
+            $uniqueFileName = uniqid() . '.' . pathinfo($fileName, PATHINFO_EXTENSION);
 
-                // بررسی نتیجه آپلود
-                if ($uploaded) {
-                    return response()->json(['url' => Storage::disk('liara')->url($fileName)], 200);
-                } else {
-                    return response()->json(['message' => 'File upload to Liara failed.'], 500);
-                }
+            // آپلود فایل به لیارا
+            $uploaded = Storage::disk('liara')->put($uniqueFileName, $fileContents);
+
+            if ($uploaded) {
+                return response()->json(['url' => Storage::disk('liara')->url($uniqueFileName)], 200);
             } else {
-                return response()->json(['message' => 'Local file not found.'], 404);
+                return response()->json(['message' => 'File upload to Liara failed.'], 500);
             }
         } else {
-            return response()->json(['message' => 'Invalid image URL.'], 400);
+            return response()->json(['message' => 'File not found in local storage.'], 404);
         }
     }
 }

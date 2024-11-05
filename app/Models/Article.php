@@ -27,7 +27,7 @@ class Article extends Model
         'count',
         'article_id',
         'parent_id',
-        'id',
+        'type',
 
 
     ];
@@ -43,69 +43,75 @@ class Article extends Model
 
     public function createarticle($user, Request $request)
     {
-        $this->cover = $coverUrl = $request->input('cover');
-        $this->title = $title = $request->input('title');
-        $this->body = $bodyHtml = $request->input('body');
-
-
-
-
-        $coverController = new EditorController();
-        $coverResponse = $coverController->moveFileToPermanentStorage(new Request(['image_url' => $coverUrl]));
-
-        if ($coverResponse->getStatusCode() == 200) {
-            $coverUrl = json_decode($coverResponse->getContent())->url;
-        } else {
-            return response()->json(['message' => 'Cover image upload failed.'], 400);
-        }
-
-
-        preg_match_all('/<img[^>]+src="([^">]+)"/i', $bodyHtml, $matches);
-        $imageUrls = $matches[1];
-
-        foreach ($imageUrls as $imageUrl) {
-            $imageResponse = $coverController->moveFileToPermanentStorage(new Request(['image_url' => $imageUrl]));
-
-            if ($imageResponse->getStatusCode() == 200) {
-                $uploadedFiles = json_decode($imageResponse->getContent())->url;
-            } else {
-                return response()->json(['message' => 'Image upload failed for URL: ' . $imageUrl], 400);
-            }
-        }
-        $user = auth()->user();
-
-        $textContent = preg_replace('/<img[^>]+>/i', '', $bodyHtml);
-        $this->body = $textContent;
-        $this->cover = $coverUrl;
-        $this->id;
-        $this->creator = $user->id;
-        $this->upload_file = $uploadedFiles;
-        $this->save();
-
-        return $this;
-    }
-
-    private function uploadImage($imageUrl)
-    {
         try {
-            // بارگذاری تصویر از URL
-            $fileContents = file_get_contents($imageUrl);
-            if ($fileContents === false) {
-                throw new \Exception('Failed to retrieve image from URL.');
-            }
+            $this->title = $request->input('title');
+//            $this->type = $request->input('type');
 
-            $fileName = uniqid() . '.' . pathinfo(parse_url($imageUrl, PHP_URL_PATH), PATHINFO_EXTENSION);
-            $uploaded = Storage::disk('liara')->put($fileName, $fileContents);
+            $bodyHtml = $request->input('body');
+            $coverUrl = $request->input('cover');
 
-            if ($uploaded) {
-                return ['success' => true, 'url' => Storage::disk('liara')->url($fileName)];
+            // آپلود تصویر کاور
+            $coverController = new EditorController();
+            $coverResponse = $coverController->moveFileToPermanentStorage(new Request(['cover' => $coverUrl]));
+
+
+            if ($coverResponse->getStatusCode() == 200) {
+                $coverUrl = json_decode($coverResponse->getContent())->url;
             } else {
-                throw new \Exception('File upload to Liara failed.');
+                throw new \Exception('Cover image upload failed.');
             }
+
+            // استخراج URL تصاویر از body
+            preg_match_all('/<img[^>]+src="([^">]+)"/i', $bodyHtml, $matches);
+            $imageUrls = $matches[1];
+            $uploadedFiles = [];
+            $imageMap = [];
+
+            foreach ($imageUrls as $imageUrl) {
+                $imageResponse = $coverController->moveFileToPermanentStorage(new Request(['cover' => $imageUrl]));
+
+                if ($imageResponse->getStatusCode() == 200) {
+                    $newUrl = json_decode($imageResponse->getContent())->url;
+                    $uploadedFiles[] = $newUrl;
+                    $imageMap[$imageUrl] = $newUrl;
+                } else {
+                    Log::error('Image upload failed for URL: ' . $imageUrl);
+                }
+            }
+
+            // جایگزینی URLهای جدید در bodyHtml
+            foreach ($imageMap as $oldUrl => $newUrl) {
+                $bodyHtml = str_replace($oldUrl, $newUrl, $bodyHtml);
+            }
+
+            // حذف تگ‌های <img> از محتوای HTML برای ذخیره در فیلد body
+            $textContent = preg_replace('/<img[^>]+>/i', '', $bodyHtml);
+
+            $this->body = $bodyHtml;
+            $this->cover = $coverUrl;
+            $this->creator = $user->id;
+            $this->upload_file = json_encode($uploadedFiles);
+            $this->save();
+return $this;
+            // بازگشت پاسخ با bodyHtml (که شامل URLهای جدید تصاویر است)
+//            return response()->json([
+//                'result' => true,
+//                'message' => 'Article created successfully',
+//                'data' => [
+//                    'title' => $this->title,
+//                    'body' => $bodyHtml,
+//                    'cover' => $this->cover,
+//                    'upload_file' => $uploadedFiles
+//                ]
+//            ], 201);
+
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+            Log::error('Article creation failed: ' . $e->getMessage());
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
+
     public static function getAllarticle()
     {
         $article = self::query()->get();
@@ -114,5 +120,9 @@ class Article extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

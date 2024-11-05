@@ -21,13 +21,14 @@ class ArticleResource extends JsonResource
     {
         return [
             'id'=>$this->id,
-            'title'=>$this->title ?? 'عموان موجود نیست',
-            'body'=>$this->body ?? 'متن موجود نیست',
-            'creator'=>$this->creator ?? 'no',
-            'upload_file' =>$this->upload_file ?? 'no',
-            'review'=>$this->review,
-            'comments'=>CommentResource::collection($this->comments),
-            'cover'=>$this->cover,
+//            'title'=>$this->title ?? 'عموان موجود نیست',
+//            'body'=>$this->body ?? 'متن موجود نیست',
+//            'creator'=>$this->creator ?? 'no',
+//            'upload_file' =>$this->upload_file ?? 'no',
+//            'review'=>$this->review,
+//            'comments'=>CommentResource::collection($this->comments),
+//            'cover'=>$this->cover,
+//            'type'=>$this->type,
 
         ];
     }
