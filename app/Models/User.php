@@ -3,7 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Http\Controllers\Traits\MediaUploadingTrait;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\Request;
@@ -18,7 +18,7 @@ use App\Http\Controllers\Api\V1\MediaController;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles,MediaUploadingTrait;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
 
 

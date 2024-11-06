@@ -41,7 +41,7 @@ class ArticleController extends Controller
         return response()->json(['message' => 'Unauthorized'], 401);
     }
 
-//Keys::articles => new ArticleResource($result)
+
 
     public function remove($id)
     {
@@ -50,7 +50,7 @@ class ArticleController extends Controller
             return response()->json(['message' => 'Article Not Found!'], 404);
         }
         $article->delete();
-        return response()->json($article);
+        return 'حذف شد';
     }
 
     public function articleDetails($id)
@@ -63,7 +63,7 @@ class ArticleController extends Controller
         } else { return response()->json(['message' => 'Article Not Found!'], 404); }
         return response()->json([
             'result' => true,
-            'message' => 'application products page',
+            'message' => 'application article page',
             'data' => [
                 new ArticleResource($article)
             ]
@@ -142,26 +142,26 @@ class ArticleController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required|string',
-            'cover' => 'string|url', // پوشش اختیاری
+            'cover' => 'string|url',
             'publish_date' => 'required|date',
             'publish_hour' => 'required|date_format:H:i',
-            'images' => 'array', // آرایه‌ای از URLها برای تصاویر
-            'images.*' => 'string|url' // هر URL در آرایه باید یک URL معتبر باشد
+            'images' => 'array',
+            'images.*' => 'string|url'
         ]);
 
-        // یافتن مقاله
+
         $article = Article::find($id);
         if (!$article) {
             return response()->json(['message' => 'Article Not Found!'], 404);
         }
 
-        // به‌روزرسانی ویژگی‌ها
+
         $article->title = $request->input('title');
         $article->body = $request->input('body');
 
-        // اگر پوشش جدیدی ارائه شده باشد، آن را به‌روزرسانی کنید
+
         if ($request->has('cover')) {
-            // بارگذاری دوباره تصویر کاور
+
             $coverController = new EditorController();
             $coverResponse = $coverController->moveFileToPermanentStorage(new Request(['image_url' => $request->input('cover')]));
 
@@ -172,7 +172,7 @@ class ArticleController extends Controller
             }
         }
 
-        // بارگذاری دوباره تصاویر
+
         if ($request->has('images')) {
             $coverController = new EditorController();
             $uploadedFiles = [];
@@ -187,16 +187,16 @@ class ArticleController extends Controller
                 }
             }
 
-            // ذخیره URLهای جدید تصاویر
+
             $article->upload_file = json_encode($uploadedFiles);
         }
 
-        // به‌روزرسانی تاریخ انتشار
+
         $article->publish_date = $request->input('publish_date');
         $article->publish_hour = $request->input('publish_hour');
-        $article->publish = true; // یا بسته به منطق شما
+        $article->publish = true;
 
-        // ذخیره تغییرات
+
         $article->save();
 
         return response()->json([
@@ -207,20 +207,20 @@ class ArticleController extends Controller
     }
     public function getUserArticles()
     {
-        // دریافت کاربر جاری
+
         $user = Auth::user();
 
-        // بررسی اینکه آیا کاربر وارد شده است
+
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        // دریافت مقالات منتشر شده توسط کاربر
-        $articles = Article::where('creator', $user->id) // فرض بر اینکه user_id در جدول articles وجود دارد
-        ->where('publish', 1) // فرض بر اینکه فیلدی برای نشان دادن وضعیت انتشار وجود دارد
+
+        $articles = Article::where('creator', $user->id)
+        ->where('publish', 1)
         ->get();
 
-        // بررسی اینکه آیا مقاله‌ای پیدا شده است یا خیر
+
         if ($articles->isEmpty()) {
             return response()->json(['message' => 'No articles found.'], 404);
         }

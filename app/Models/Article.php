@@ -50,7 +50,7 @@ class Article extends Model
             $bodyHtml = $request->input('body');
             $coverUrl = $request->input('cover');
 
-            // آپلود تصویر کاور
+
             $coverController = new EditorController();
             $coverResponse = $coverController->moveFileToPermanentStorage(new Request(['cover' => $coverUrl]));
 
@@ -61,7 +61,7 @@ class Article extends Model
                 throw new \Exception('Cover image upload failed.');
             }
 
-            // استخراج URL تصاویر از body
+
             preg_match_all('/<img[^>]+src="([^">]+)"/i', $bodyHtml, $matches);
             $imageUrls = $matches[1];
             $uploadedFiles = [];
@@ -79,12 +79,12 @@ class Article extends Model
                 }
             }
 
-            // جایگزینی URLهای جدید در bodyHtml
+
             foreach ($imageMap as $oldUrl => $newUrl) {
                 $bodyHtml = str_replace($oldUrl, $newUrl, $bodyHtml);
             }
 
-            // حذف تگ‌های <img> از محتوای HTML برای ذخیره در فیلد body
+
             $textContent = preg_replace('/<img[^>]+>/i', '', $bodyHtml);
 
             $this->body = $bodyHtml;
@@ -93,17 +93,7 @@ class Article extends Model
             $this->upload_file = json_encode($uploadedFiles);
             $this->save();
 return $this;
-            // بازگشت پاسخ با bodyHtml (که شامل URLهای جدید تصاویر است)
-//            return response()->json([
-//                'result' => true,
-//                'message' => 'Article created successfully',
-//                'data' => [
-//                    'title' => $this->title,
-//                    'body' => $bodyHtml,
-//                    'cover' => $this->cover,
-//                    'upload_file' => $uploadedFiles
-//                ]
-//            ], 201);
+
 
         } catch (\Exception $e) {
             Log::error('Article creation failed: ' . $e->getMessage());

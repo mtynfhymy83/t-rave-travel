@@ -34,7 +34,7 @@ class ReplyController extends Controller
         ]);
 
         $comment = Comment::findOrFail($commentId);
-        // فرض بر این است که کامنت یک رابطه به مدل پاسخ دارد
+
         $comment->replies()->create([
             'message' => $request->message,
             'user_id' => auth()->id(),

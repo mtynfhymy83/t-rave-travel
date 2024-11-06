@@ -19,9 +19,9 @@ public function handle(Request $request, Closure $next)
 {
 $user = Auth::user();
 
-// فرض کنید که فیلد 'profile_completed' برای بررسی کامل بودن پروفایل کاربر وجود دارد
+
 if ($user && !$user->profile_completed) {
-// اگر پروفایل کاربر کامل نیست، او را به صفحه ویرایش پروفایل هدایت کنید
+
 return response()->json('پروفایل کامل نیست');
 }
 

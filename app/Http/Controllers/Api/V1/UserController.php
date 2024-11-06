@@ -2,19 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\DTOs\UserDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Repositories\UserRepository;
-use App\Http\Resources\ArticleResource;
-use App\Http\Resources\UserResource;
-use App\Http\services\Keys;
 use App\Models\User;
-use http\Env\Response;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-
-
     public static function updateprofile(Request $request)
     {
         $user = auth()->user();
@@ -22,48 +16,60 @@ class UserController extends Controller
         if (!$user) {
             return response()->json([
                 'result' => false,
-                'message' => "User not found",
+                'message' => "کاربر یافت نشد",
                 'data' => []
             ], 403);
         }
 
-        // به‌روزرسانی اطلاعات کاربر
+
         User::updateUserInfo($user, $request);
 
-        // بررسی کامل بودن پروفایل
+
         if ($user->name && $user->mobile) {
             $user->profile_completed = true;
         } else {
-            $user->profile_completed = false; // در صورت عدم وجود نام یا عکس، پروفایل کامل نیست
+            $user->profile_completed = false;
         }
 
         $user->save();
 
+
+        $userDTO = new UserDTO(
+            $user->id,
+            $user->name,
+            $user->mobile,
+            $user->photo,
+            $user->profile_completed
+        );
+
         return response()->json([
             'result' => true,
-            'message' => "User updated",
+            'message' => "اطلاعات کاربر با موفقیت به‌روزرسانی شد",
             'data' => [
-                Keys::user => new UserResource($user)
+                'user' => $userDTO
             ]
-        ], 200); // تغییر کد وضعیت به 200 برای موفقیت
+        ], 200);
     }
-
-
-
 
     public function profile(Request $request)
     {
         $user = auth()->user();
-        return Response()->json([
-            'result'=>true,
-            'message'=>"user profile",
-            'data'=>[
-                Keys::user=> new UserResource($user),
 
+
+        $userDTO = new UserDTO(
+            $user->id,
+            $user->name,
+            $user->mobile,
+            $user->photo,
+            $user->profile_completed
+        );
+
+        return response()->json([
+            'result' => true,
+            'message' => "پروفایل کاربر",
+            'data' => [
+                'user' => $userDTO
             ]
-        ],200);
+        ], 200);
     }
-
-
-
 }

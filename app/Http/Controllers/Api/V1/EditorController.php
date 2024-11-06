@@ -48,20 +48,20 @@ class EditorController extends Controller
 
         $fileUrl = $validated['cover'];
 
-        // استخراج نام فایل از URL
+
         $fileName = basename($fileUrl);
 
-        // مسیر کامل فایل در storage (سیستم محلی)
-        $localFilePath = '/travel/storage/app/public/local/' . $fileName; // مسیر جدید بر اساس ساختار شما
 
-        // بررسی وجود فایل در سیستم محلی با استفاده از Storage facade
+        $localFilePath = '/travel/storage/app/public/local/' . $fileName;
+
+
         if (file_exists($localFilePath)) {
             $fileContents = file_get_contents($localFilePath);
 
-            // ساخت نام یکتا برای فایل در لیارا
+
             $uniqueFileName = uniqid() . '.' . pathinfo($fileName, PATHINFO_EXTENSION);
 
-            // آپلود فایل به لیارا
+
             $uploaded = Storage::disk('liara')->put($uniqueFileName, $fileContents);
 
             if ($uploaded) {

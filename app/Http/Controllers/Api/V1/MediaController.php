@@ -15,7 +15,7 @@ class MediaController extends Controller
 {
     public function tempMedia(Request $request)
     {
-// اعتبارسنجی ورودی‌ها
+
         $validated = $request->validate([
             'upload' => 'required|file',
         ]);
@@ -57,97 +57,50 @@ class MediaController extends Controller
 
     public function moveFileToPermanentStorage(Request $request)
     {
-        // اعتبارسنجی ورودی‌ها
+
         try {
-            // اعتبارسنجی ورودی‌ها
+
             $validated = $request->validate([
-                'path' => 'required|string', // مسیر فایل موقت
+                'path' => 'required|string',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // اگر اعتبارسنجی شکست خورد، پیغام خطا را چاپ کنید
+
             return response()->json(['message' => 'upload fail ' . $e->getMessage()], 400);
         }
 
-        // دریافت مسیر فایل از ورودی
+
         $filePath = $validated['path'];
 
 
-        // اگر مسیر شامل 'public/local' نیست، به مسیر اضافه‌اش می‌کنیم
         if (!str_contains($filePath, 'public/')) {
             $filePath = 'public/' . $filePath;
         }
 
-        // مسیر کامل فایل در storage (سیستم محلی)
+
         $localFilePath = storage_path('app/' . $filePath);
 
-        // بررسی وجود فایل در مسیر محلی
+
         if (file_exists($localFilePath)) {
-            // ساخت یک نام یکتا برای فایل در لیارا
+
             $fileName = uniqid() . '.' . pathinfo($localFilePath, PATHINFO_EXTENSION);
 
-            // خواندن محتویات فایل محلی
+
             $fileContents = file_get_contents($localFilePath);
 
-            // آپلود فایل در لیارا
+
             $uploaded = Storage::disk('liara')->put($fileName, $fileContents);
 
-            // اگر آپلود موفقیت‌آمیز بود
+
             if ($uploaded) {
-                // برگرداندن URL فایل در لیارا
+
                 return Storage::disk('liara')->url($fileName);
             } else {
                 return response()->json(['message' => 'File upload to Liara failed.'], 500);
             }
         } else {
-            // اگر فایل در سیستم محلی پیدا نشد
+
             return response()->json(['message' => 'File not found in local storage.'], 404);
         }
     }
 
-    public function uploadArticle(Request $request)
-    {
-// Validate the request
-        // $request->validate([
-        //     'upload' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        // ]);
-
-
-        // $expireAt = Carbon::now()->addMinutes(10);
-
-
-        if ($request->hasFile('upload')) {
-
-            $path = $request->file('upload')->store('local', 'public');
-            $temporaryUrl = url('storage/' . $path);
-
-            return response()->json([
-                'uploaded' => 1,
-                'url' => $temporaryUrl,
-            ]);
-        }
-
-
-        return response()->json([
-            'error' => 'File not found',
-        ], 400);
-    }
 }
-// نام جدید فایل برای انتقال به دایرکتوری اصلی (public)
-//    $newFilePath = str_replace('public', 'liara/', $filePath);
-//
-//// انتقال فایل به مسیر جدید
-//    Storage::move($filePath, $newFilePath);
-
-// پاسخ موفقیت‌آمیز با مسیر جدید فایل
-//    return response()->json([
-//        'message' => 'File moved successfully',
-//        'new_file_path' => $newFilePath,
-//        'new_file_url' => Storage::url($newFilePath),
-//    ]);
-//
-//
-//return response()->json([
-//'error' => 'File not found',
-//], 404);
-//}
-//}
