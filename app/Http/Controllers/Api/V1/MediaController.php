@@ -2,105 +2,76 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
+use App\Services\MediaService; // سرویس جدید
 use Illuminate\Http\Request;
-use App\Http\Controllers\Traits\MediaUploadingTrait;
-use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
 
-use App\Http\Controllers\Api\V1;
 class MediaController extends Controller
 {
+    protected $mediaService;
+
+    public function __construct(MediaService $mediaService)
+    {
+        // تزریق سرویس به کنترلر
+        $this->mediaService = $mediaService;
+    }
+
+    /**
+     * ذخیره فایل به صورت موقت و بازگشت آدرس موقت
+     */
     public function tempMedia(Request $request)
     {
-
+        // اعتبارسنجی فایل دریافتی
         $validated = $request->validate([
             'upload' => 'required|file',
         ]);
 
-
+        // بررسی اینکه آیا فایل ارسال شده است یا خیر
         if ($request->hasFile('upload')) {
-
-            $path = $request->file('upload')->store('local', 'public');
+            // ذخیره فایل در فضای موقت
+            $path = $this->mediaService->storeTempFile($request->file('upload'));
             $temporaryUrl = url('storage/' . $path);
 
+            // بازگشت اطلاعات فایل
             return response()->json([
                 'uploaded' => 1,
                 'url' => $temporaryUrl,
                 'path' => $path,
-
             ]);
         }
-        // if ($file) {
 
-        // $filePath = $file->store('local', 'public');
-
-        // $temporaryUrl = url('storage/' . $filePath);
-
-
-//             return response()->json([
-// //                'id' => $id,
-//                 'url' => $temporaryUrl,
-//                 'uploaded' => 1,
-
-//             ]);
-        // }
-
-
+        // اگر فایلی یافت نشد، ارسال پیام خطا
         return response()->json([
             'error' => 'File not found',
         ], 400);
     }
 
-
+    /**
+     * انتقال فایل از فضای موقت به فضای دائمی
+     */
     public function moveFileToPermanentStorage(Request $request)
     {
+        // اعتبارسنجی مسیر فایل
+        $validated = $request->validate([
+            'path' => 'required|string',
+        ]);
 
-        try {
-
-            $validated = $request->validate([
-                'path' => 'required|string',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-
-            return response()->json(['message' => 'upload fail ' . $e->getMessage()], 400);
-        }
-
-
+        // دریافت مسیر فایل
         $filePath = $validated['path'];
 
+        // انتقال فایل به فضای دائمی
+        $url = $this->mediaService->moveFileToPermanentStorage($filePath);
 
-        if (!str_contains($filePath, 'public/')) {
-            $filePath = 'public/' . $filePath;
+        // بررسی نتیجه انتقال
+        if ($url) {
+            return response()->json([
+                'url' => $url,
+                'message' => 'File uploaded successfully.',
+            ]);
         }
 
-
-        $localFilePath = storage_path('app/' . $filePath);
-
-
-        if (file_exists($localFilePath)) {
-
-            $fileName = uniqid() . '.' . pathinfo($localFilePath, PATHINFO_EXTENSION);
-
-
-            $fileContents = file_get_contents($localFilePath);
-
-
-            $uploaded = Storage::disk('liara')->put($fileName, $fileContents);
-
-
-            if ($uploaded) {
-
-                return Storage::disk('liara')->url($fileName);
-            } else {
-                return response()->json(['message' => 'File upload to Liara failed.'], 500);
-            }
-        } else {
-
-            return response()->json(['message' => 'File not found in local storage.'], 404);
-        }
+        // اگر فایل پیدا نشد یا آپلود به مشکل خورد
+        return response()->json([
+            'message' => 'File upload failed.',
+        ], 500);
     }
-
 }

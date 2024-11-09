@@ -29,6 +29,7 @@ class ArticleResource extends JsonResource
             'comments'=>CommentResource::collection($this->comments),
             'cover'=>$this->cover,
             'type'=>$this->type,
+            'created_at'=>$this->created_at,
 
         ];
     }

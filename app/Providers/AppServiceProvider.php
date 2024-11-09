@@ -1,26 +1,21 @@
 <?php
-
 namespace App\Providers;
 
+use App\services\AuthService;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
+public function register()
+{
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot()
-    {
-        Schema::defaultStringLength(191);
-    }
+$this->app->singleton(AuthService::class, function ($app) {
+return new AuthService();
+});
+}
 
+public function boot()
+{
+//
+}
 }

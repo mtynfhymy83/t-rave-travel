@@ -24,7 +24,7 @@ Route::prefix('/v1')->namespace('Api\V1')->group(function () {
     Route::middleware('auth:sanctum')->post('update_profile', [\App\Http\Controllers\Api\V1\UserController::class, 'updateprofile']);
     Route::get('article_details/{id}', [\App\Http\Controllers\Api\V1\ArticleController::class, 'articleDetails']);
     Route::middleware('auth:sanctum')->post('save_article_comment',[\App\Http\Controllers\Api\V1\ArticleController::class, 'saveComment']);
-    Route::post('search_article',[\App\Http\Controllers\Api\V1\ArticleController::class, 'searcharticle']);
+    Route::get('search_article',[\App\Http\Controllers\Api\V1\ArticleController::class, 'searcharticle']);
     Route::post('tickets/{ticket}/reply', [\App\Http\Controllers\Api\V1\ReplyController::class, 'replyToTicket']);
     Route::post('comments/{comment}/reply', [ReplyController::class, 'replyToComment']);
     Route::post('temp_media', [App\Http\Controllers\Api\V1\MediaController::class, 'tempMedia']);
@@ -42,6 +42,8 @@ Route::prefix('/v1')->namespace('Api\V1')->middleware('auth:sanctum')->group(fun
     Route::middleware(['auth:sanctum' , 'profile'])->post('remove/{id}' , [\App\Http\Controllers\Api\V1\ArticleController::class, 'remove']);
     Route::middleware(['auth:sanctum' , 'profile'])->post('article/{id}/publish' , [\App\Http\Controllers\Api\V1\ArticleController::class, 'publishArticle']);
     Route::middleware(['auth:sanctum' , 'profile'])->get('getall_article' , [\App\Http\Controllers\Api\V1\ArticleController::class, 'getUserArticles']);
+    Route::middleware(['auth:sanctum' , 'profile'])->post('message' , [\App\Http\Controllers\Api\V1\MessageController::class, 'sendMessageWithAttachment']);
+    Route::middleware(['auth:sanctum' , 'profile'])->get('messages/{ticketId}' , [\App\Http\Controllers\Api\V1\MessageController::class, 'getMessagesForTicket']);
 });
 
 

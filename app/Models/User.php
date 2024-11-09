@@ -2,25 +2,16 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Http\Request;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use App\Http\Controllers\Api\V1\MediaController;
-
+use App\Services\MediaService;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
-
-
 
     protected $fillable = [
         'name',
@@ -29,52 +20,54 @@ class User extends Authenticatable
         'photo',
         'id',
         'profile_completed',
-
     ];
 
-
-
-
-
-
+    // روابط مدل
     public function addresses()
     {
         return $this->hasMany(Address::class);
     }
+
     public function tickets()
     {
         return $this->hasMany(Ticket::class);
-
     }
+
     public function articles()
     {
         return $this->hasMany(Article::class);
     }
-
 
     public function comments()
     {
         return $this->hasMany(Comment::class);
     }
 
-
-    public static function updateUserInfo($user,$request)
+    /**
+     * بروزرسانی اطلاعات کاربر
+     *
+     * @param \App\Models\User $user
+     * @param \Illuminate\Http\Request $request
+     */
+    public static function updateUserInfo($user, $request)
     {
-        if ($request->file('upload') ){
+        // استفاده از سرویس MediaService برای مدیریت فایل‌ها
+        $mediaService = new MediaService(); // ایجاد نمونه از سرویس
 
-            $mediaController = new MediaController();
-            $image = $mediaController->moveFileToPermanentStorage($request);
+        // چک کردن اینکه آیا فایلی ارسال شده است یا خیر
+        if ($request->file('upload')) {
+            $image = $mediaService->moveFileToPermanentStorage($request->file('upload')->store('temp', 'public')); // آپلود فایل و دریافت مسیر
         } else {
-            $image = 'nothing to upload';
+            $image = null;
         }
 
-
+        // بروزرسانی اطلاعات کاربر
         $user->update([
-            'name'=>$request->input('name'),
-            'phone'=>$request->input('phone'),
-            'photo'=>$image,
-//            'password'=>$request->input('password'),
+            'name' => $request->input('name'),
+            'phone' => $request->input('phone'),
+            'photo' => $image,  // مسیر عکس به‌روز شده
+
         ]);
     }
-
 }
+

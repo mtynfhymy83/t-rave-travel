@@ -1,231 +1,154 @@
 <?php
 
+// app/Http/Controllers/Api/V1/ArticleController.php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Repositories\ArticleRepository;
-use App\Http\Resources\CommentResource;
-use App\Http\Repositories\ProductRepository;
 use App\Http\Resources\ArticleResource;
-use App\Http\Resources\UserResource;
-use App\Http\services\Keys;
+use App\Services\ArticleService;
 use App\Models\Article;
 use App\Models\Comment;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ArticleController extends Controller
 {
+    protected $articleService;
+
+    // سازنده برای تزریق سرویس ArticleService
+    public function __construct(ArticleService $articleService)
+    {
+        $this->articleService = $articleService;
+    }
+
+    // ایجاد مقاله جدید
     public function create(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string',
-            'cover' => 'required|string',
-        ]);
-
         $user = auth()->user();
 
         if ($user) {
+            $article = $this->articleService->createArticle($request, $user);
 
-            $article = new Article();
-            $result = $article->createarticle($user, $request);
             return response()->json([
                 'result' => true,
                 'message' => "Article created successfully",
-                'data' => ['id' => $result->id]
+                'data' => ['id' => $article->id]
             ], 201);
         }
 
         return response()->json(['message' => 'Unauthorized'], 401);
     }
 
-
-
+    // حذف مقاله
     public function remove($id)
     {
-        $article = Article::find($id);
-        if (!$article) {
-            return response()->json(['message' => 'Article Not Found!'], 404);
+        $result = $this->articleService->removeArticle($id);
+        if ($result) {
+            return response()->json(['message' => 'Article deleted successfully'], 200);
         }
-        $article->delete();
-        return 'حذف شد';
+
+        return response()->json(['message' => 'Article Not Found!'], 404);
     }
 
+    // دریافت جزئیات مقاله
     public function articleDetails($id)
     {
-        $article = Article::query()->find($id);
-        if($article) {
+        $article = $this->articleService->getArticleDetails($id);
 
+        if ($article) {
             $article->increment('review');
-            $articleResource = new ArticleResource($article);
-        } else { return response()->json(['message' => 'Article Not Found!'], 404); }
-        return response()->json([
-            'result' => true,
-            'message' => 'application article page',
-            'data' => [
-                new ArticleResource($article)
-            ]
+            return response()->json([
+                'result' => true,
+                'message' => 'Article details fetched successfully',
+                'data' => new ArticleResource($article)
+            ], 200);
+        }
 
-        ], 200);
+        return response()->json(['message' => 'Article Not Found!'], 404);
     }
-    public function saveComment(Request $request)
-    {
 
-        $user = auth()->user();
-     Comment::query()->create([
-            'body'=>$request->input('body'),
-            'parent_id'=>$request->input('parent_id',null),
-            'user_id'=>$user->id,
-            'article_id'=>$request->input('article_id'),
-
-        ]);
-
-        $article = Article::query()->find($request->input('article_id'));
-
-        return response()->json([
-            'result'=>true,
-            'message'=>'application products page',
-            'data'=>[
-                new ArticleResource($article)
-            ]
-
-        ],200);
-    }
+    // جستجو در مقالات
     public function searcharticle(Request $request)
     {
-        return response()->json([
-            'result'=>true,
-            'message'=>'application products page',
-            'data'=>[
-//                Keys::articles=>Article::getAllarticle(),
-                Keys::searched_article=>ArticleRepository::searchedarticles($request->input('search'))->response()->getData(true),
-            ]
+        // گرفتن مقدار جستجو از پارامترهای URL
+        $searchTerm = $request->query('search'); // استفاده از query() برای دریافت پارامتر از URL
 
-        ],200);
-    }
-    public function publishArticle(Request $request, $id)
-    {
-        $request->validate([
-            'type' => 'required|string',
-            'publish_hour' => 'required|string',
-            'publish_date' => 'required|string',
-        ]);
-
-        $article = Article::findOrFail($id);
-        $article->type = $request->input('type');
-        $article->publish_hour = $request->input('publish_hour');
-        $article->publish_date = $request->input('publish_date');
-        $article->publish =  1;
-        $article->save();
+        // فراخوانی سرویس برای جستجو
+        $articles = $this->articleService->searchArticles($searchTerm);
 
         return response()->json([
             'result' => true,
-            'message' => "Article published successfully",
-            'data' => [
-                'title' => $article->title,
-                'body' => $article->body,
-                'type' => $article->type,
-                'publish_hour' => $article->publish_hour,
-                'publish_date' => $article->publish_date,
-                'publish' => $article->publish,
-                'cover' => $article->cover,
-                'comments'=>CommentResource::collection($article->comments),
-
-            ]
+            'message' => 'Articles fetched successfully',
+            'data' => ArticleResource::collection($articles)
         ], 200);
     }
+
+    // ویرایش مقاله
     public function edit(Request $request, $id)
     {
-        // اعتبارسنجی ورودی
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string',
-            'cover' => 'string|url',
-            'publish_date' => 'required|date',
-            'publish_hour' => 'required|date_format:H:i',
-            'images' => 'array',
-            'images.*' => 'string|url'
-        ]);
+        $article = $this->articleService->editArticle($id, $request->all());
 
-
-        $article = Article::find($id);
-        if (!$article) {
-            return response()->json(['message' => 'Article Not Found!'], 404);
+        if ($article) {
+            return response()->json([
+                'result' => true,
+                'message' => "Article updated successfully",
+                'data' => new ArticleResource($article)
+            ], 200);
         }
 
-
-        $article->title = $request->input('title');
-        $article->body = $request->input('body');
-
-
-        if ($request->has('cover')) {
-
-            $coverController = new EditorController();
-            $coverResponse = $coverController->moveFileToPermanentStorage(new Request(['image_url' => $request->input('cover')]));
-
-            if ($coverResponse->getStatusCode() == 200) {
-                $article->cover = json_decode($coverResponse->getContent())->url;
-            } else {
-                return response()->json(['message' => 'Cover image upload failed.'], 500);
-            }
-        }
-
-
-        if ($request->has('images')) {
-            $coverController = new EditorController();
-            $uploadedFiles = [];
-
-            foreach ($request->input('images') as $imageUrl) {
-                $imageResponse = $coverController->moveFileToPermanentStorage(new Request(['image_url' => $imageUrl]));
-
-                if ($imageResponse->getStatusCode() == 200) {
-                    $uploadedFiles[] = json_decode($imageResponse->getContent())->url;
-                } else {
-                    Log::error('Image upload failed for URL: ' . $imageUrl);
-                }
-            }
-
-
-            $article->upload_file = json_encode($uploadedFiles);
-        }
-
-
-        $article->publish_date = $request->input('publish_date');
-        $article->publish_hour = $request->input('publish_hour');
-        $article->publish = true;
-
-
-        $article->save();
-
-        return response()->json([
-            'result' => true,
-            'message' => "Article updated successfully",
-            'data' => new ArticleResource($article)
-        ], 200);
+        return response()->json(['message' => 'Article Not Found!'], 404);
     }
+
+    // دریافت مقالات کاربر
     public function getUserArticles()
     {
-
         $user = Auth::user();
-
 
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-
-        $articles = Article::where('creator', $user->id)
-        ->where('publish', 1)
-        ->get();
-
+        $articles = $this->articleService->getUserArticles($user->id);
 
         if ($articles->isEmpty()) {
             return response()->json(['message' => 'No articles found.'], 404);
         }
 
-        return response()->json($articles, 200);
+        return response()->json(ArticleResource::collection($articles), 200);
     }
-}
+    public function publishArticle(Request $request, $id)
+    {
+        try {
+            // استفاده از سرویس برای انتشار مقاله
+            $article = $this->articleService->publishArticle($id, $request);
 
+            // جدا کردن اولین خط از متن body
+            $bodyLines = explode("\n", $article->body);
+            $bodyFirstLine = $bodyLines[0]; // گرفتن اولین خط
+
+            // بازگشت پاسخ موفق
+            return response()->json([
+                'result' => true,
+                'message' => "Article published successfully",
+                'data' => [
+                    'title' => $article->title,
+                    'body' => $article->body,
+                    'type' => $article->type,
+                    'publish_hour' => $article->publish_hour,
+                    'publish_date' => $article->publish_date,
+                    'publish' => $article->publish,
+                    'cover' => $article->cover,
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+}
