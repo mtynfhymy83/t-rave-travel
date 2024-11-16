@@ -125,4 +125,5 @@ return [
     'aliases' => [
         'Image' => Intervention\Image\Facades\Image::class,
     ],
+
 ];

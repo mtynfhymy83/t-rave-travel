@@ -15,7 +15,7 @@ class FileUploadService
      * @param string $fileInput
      * @return string
      */
-    public function uploadToLocalStorage($fileInput)
+    public function uploadToLocalStorage($fileInput): string
     {
         if ($fileInput) {
             // Store file in public disk (local storage)
@@ -33,10 +33,10 @@ class FileUploadService
      * @param string $fileUrl
      * @return string
      */
-    public function moveFileToPermanentStorage($fileUrl)
+    public function moveFileToPermanentStorage($coverUrl)
     {
         try {
-            $fileName = basename($fileUrl);
+            $fileName = basename($coverUrl);
             $localFilePath = storage_path('app/public/local/' . $fileName);
 
             if (file_exists($localFilePath)) {

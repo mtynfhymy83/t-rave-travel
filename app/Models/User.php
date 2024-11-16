@@ -55,8 +55,10 @@ class User extends Authenticatable
         $mediaService = new MediaService(); // ایجاد نمونه از سرویس
 
         // چک کردن اینکه آیا فایلی ارسال شده است یا خیر
-        if ($request->file('upload')) {
-            $image = $mediaService->moveFileToPermanentStorage($request->file('upload')->store('temp', 'public')); // آپلود فایل و دریافت مسیر
+        if ($request->string('path')) {
+            $filepath = $request->input('path'); // دریافت مقدار فیلد path از درخواست
+            $image = $mediaService->moveFileToPermanentStorage($filepath); // ارسال به متد moveFileToPermanentStorage
+             // نمایش نتیجه
         } else {
             $image = null;
         }

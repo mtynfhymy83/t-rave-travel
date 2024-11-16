@@ -59,30 +59,29 @@ class Article extends Model
      * @param FileUploadService $fileUploadService
      * @return Article
      */
-    public function createArticle($user, Request $request, FileUploadService $fileUploadService)
+    public function createArticle($data)
     {
         try {
-            // اعتبارسنجی و دریافت داده‌ها از درخواست
-            $this->title = $request->input('title');
-            $this->body = $request->input('body');
-            $this->creator = $user->id;
-
+            // دریافت داده‌ها از آرایه $data
+            $this->title = $data['title'];  // از $data['title'] برای title استفاده کنید
+            $this->creator = $data['creator'];  // از $data['creator'] برای creator استفاده کنید
+$fileUploadService = new FileUploadService();
             // پردازش تصویر کاور
-            $coverUrl = $request->input('cover');
-            $coverUrl = $fileUploadService->moveFileToPermanentStorage($coverUrl); // انتقال فایل به ذخیره‌سازی دائمی
-            $this->cover = $coverUrl;
+            $Url = $data['cover'];  // از $data['cover'] برای تصویر کاور استفاده کنید
+            $coverUrl = $fileUploadService->moveFileToPermanentStorage($Url);  // انتقال فایل به ذخیره‌سازی دائمی
+            $this->cover = $coverUrl;  // ذخیره URL جدید تصویر کاور
 
             // پردازش تصاویر داخل بدنه مقاله
-            $this->body = $this->processImagesInBody($this->body, $fileUploadService);
+            $this->body = $this->processImagesInBody($data['body'], $fileUploadService);  // ارسال بدنه مقاله به متد پردازش تصاویر
 
             // پردازش فایل‌های پیوست شده
-            $uploadedFiles = $this->handleAttachedFiles($request->input('body'), $fileUploadService);
-            $this->upload_file = json_encode($uploadedFiles);
+            $uploadedFiles = $this->handleAttachedFiles($data['body'], $fileUploadService);  // ارسال بدنه مقاله برای پردازش فایل‌های پیوست
+            $this->upload_file = json_encode($uploadedFiles);  // ذخیره فایل‌های آپلود شده به صورت JSON
 
             // ذخیره مقاله
             $this->save();
 
-            return $this;
+            return $this;  // بازگشت خود مدل
         } catch (\Exception $e) {
             Log::error('Article creation failed: ' . $e->getMessage());
             throw new \Exception('Article creation failed: ' . $e->getMessage());
@@ -105,14 +104,14 @@ class Article extends Model
         $imageMap = [];
 
         // آپلود تصاویر و جایگزینی URL های جدید
-        foreach ($imageUrls as $imageUrl) {
+        foreach ($imageUrls as $Url) {
             try {
-                // انتقال تصویر به ذخیره‌سازی دائمی
-                $newUrl = $fileUploadService->moveFileToPermanentStorage($imageUrl);
+                // انتقال تصویر به ذخیره‌سازی دائمی و دریافت URL کامل
+                $newUrl = $fileUploadService->moveFileToPermanentStorage($Url);
                 $uploadedFiles[] = $newUrl;
-                $imageMap[$imageUrl] = $newUrl;
+                $imageMap[$Url] = $newUrl;
             } catch (\Exception $e) {
-                Log::error('Image upload failed for URL: ' . $imageUrl);
+                Log::error('Image upload failed for URL: ' . $Url);
             }
         }
 
@@ -150,7 +149,6 @@ class Article extends Model
 
         return $uploadedFiles;
     }
-
     /**
      * دریافت تمامی مقالات
      */

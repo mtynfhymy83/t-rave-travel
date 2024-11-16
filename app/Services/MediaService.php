@@ -15,7 +15,7 @@ class MediaService
     public function storeTempFile($file)
     {
         // ذخیره فایل در فضای عمومی به صورت موقت
-        $path = $file->store('temp', 'public');
+        $path = $file->store('local', 'public');
         return $path;
     }
 
@@ -28,28 +28,29 @@ class MediaService
     public function moveFileToPermanentStorage($filePath)
     {
         // بررسی اینکه فایل در فضای public قرار دارد یا خیر
-        if (!str_contains($filePath, 'public/')) {
-            $filePath = 'public/' . $filePath;
-        }
-
-        // مسیر کامل فایل
-        $localFilePath = storage_path('app/' . $filePath);
+//        if (!str_contains($filePath, 'public/')) {
+//            $filePath = 'public/' . $filePath;
+//        }
 
         // بررسی اینکه فایل در سیستم وجود دارد
-        if (file_exists($localFilePath)) {
+        if (Storage::disk('public')->exists($filePath)) {
             // نام یکتا برای فایل ایجاد می‌کنیم
-            $fileName = uniqid() . '.' . pathinfo($localFilePath, PATHINFO_EXTENSION);
+            $fileName = uniqid() . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
 
             // دریافت محتوای فایل
-            $fileContents = file_get_contents($localFilePath);
+            $fileContents = Storage::disk('public')->get($filePath);
 
             // آپلود فایل به فضای دائمی (مثلاً Liara)
             $uploaded = Storage::disk('liara')->put($fileName, $fileContents);
 
             // در صورت موفقیت، URL فایل در فضای دائمی باز می‌گردد
-            return $uploaded ? Storage::disk('liara')->url($fileName) : null;
+            if ($uploaded) {
+                return Storage::disk('liara')->url($fileName);
+            } else {
+                return null;
+            }
         }
 
-        return null;
+        return false;
     }
 }

@@ -2,7 +2,7 @@
 
 // app/Services/AuthService.php
 
-namespace App\services;
+namespace App\Services;
 
 use App\Models\SmsCode;
 use App\Models\User;

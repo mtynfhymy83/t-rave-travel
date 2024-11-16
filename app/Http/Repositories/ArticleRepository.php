@@ -68,7 +68,7 @@ class ArticleRepository
 
     public function create(array $data)
     {
-        return Article::create($data);
+        return (new \App\Models\Article)->createArticle($data);
     }
 
     // دریافت تمامی مقالات منتشر شده

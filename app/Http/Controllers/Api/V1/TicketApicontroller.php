@@ -7,7 +7,7 @@ use App\Http\Resources\TicketResource;
 use App\Services\TicketService;
 use Illuminate\Http\Request;
 
-class TicketApiController extends Controller
+class TicketApicontroller extends Controller
 {
     // استفاده از سرویس TicketService
     protected $ticketService;

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('mobile')->unique()->nullable();
             $table->string('email')->unique()->nullable();
             $table->string('photo')->nullable();
-            $table->string('status')->default(\App\Enums\UserStatus::Active->value);
+            $table->string('status')->default(\App\Enums\UserStatus::Admin->value);
             $table->string('password');
             $table->tinyInteger('department')->comment('0: support, 1:admin');
             $table->timestamps();
